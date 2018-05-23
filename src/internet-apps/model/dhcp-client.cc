@@ -46,13 +46,13 @@
 #include "dhcp-client.h"
 #include "dhcp-header.h"
 
-namespace ns3 { 
+namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("DhcpClient"); 
-NS_OBJECT_ENSURE_REGISTERED (DhcpClient); 
+NS_LOG_COMPONENT_DEFINE ("DhcpClient");
+NS_OBJECT_ENSURE_REGISTERED (DhcpClient);
 
-TypeId 
-DhcpClient::GetTypeId (void) 
+TypeId
+DhcpClient::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::DhcpClient")
     .SetParent<Application> ()
@@ -123,6 +123,7 @@ Ptr<NetDevice> DhcpClient::GetDhcpClientNetDevice (void)
   return m_device;
 }
 
+
 void DhcpClient::SetDhcpClientNetDevice (Ptr<NetDevice> netDevice)
 {
   m_device = netDevice;
@@ -159,16 +160,15 @@ DhcpClient::StartApplication (void)
   m_remoteAddress = Ipv4Address ("255.255.255.255");
   m_myAddress = Ipv4Address ("0.0.0.0");
   m_gateway = Ipv4Address ("0.0.0.0");
-  
-  Ptr<Ipv4> ipv4 = GetNode ()->GetObject<Ipv4> (); 
-  uint32_t ifIndex = ipv4->GetInterfaceForDevice (m_device); 
+  Ptr<Ipv4> ipv4 = GetNode ()->GetObject<Ipv4> ();
+  uint32_t ifIndex = ipv4->GetInterfaceForDevice (m_device);
 
   // We need to cleanup the type from the stored chaddr, or later we'll fail to compare it.
   // Moreover, the length is always 16, because chaddr is 16 bytes.
   Address myAddress = m_device->GetAddress ();
   NS_LOG_INFO ("My address is " << myAddress);
-  uint8_t addr[Address::MAX_SIZE]; 
-  std::memset (addr, 0, Address::MAX_SIZE); 
+  uint8_t addr[Address::MAX_SIZE];
+  std::memset (addr, 0, Address::MAX_SIZE);
   uint32_t len = myAddress.CopyTo (addr);
   NS_ASSERT_MSG (len <= 16, "DHCP client can not handle a chaddr larger than 16 bytes");
   m_chaddr.CopyFrom (addr, 16);
@@ -177,7 +177,7 @@ DhcpClient::StartApplication (void)
   bool found = false;
   for (uint32_t i = 0; i < ipv4->GetNAddresses (ifIndex); i++)
     {
-      if (ipv4->GetAddress (ifIndex, i).GetLocal () == m_myAddress) 
+      if (ipv4->GetAddress (ifIndex, i).GetLocal () == m_myAddress)
         {
           found = true;
         }
@@ -188,7 +188,7 @@ DhcpClient::StartApplication (void)
     }
   if (m_socket == 0)
     {
-      TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory"); 
+      TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
       m_socket = Socket::CreateSocket (GetNode (), tid);
       InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), 68);
       m_socket->SetAllowBroadcast (true);
@@ -277,7 +277,7 @@ void DhcpClient::NetHandler (Ptr<Socket> socket)
 {
   NS_LOG_FUNCTION (this << socket);
 
-  Address from;					
+  Address from;
   Ptr<Packet> packet = m_socket->RecvFrom (from);
   DhcpHeader header;
   if (packet->RemoveHeader (header) == 0)
@@ -421,9 +421,7 @@ void DhcpClient::AcceptAck (DhcpHeader header, Address from)
   Simulator::Remove (m_rebindEvent);
   Simulator::Remove (m_refreshEvent);
   Simulator::Remove (m_timeout);
-
   NS_LOG_INFO ("DHCP ACK received");
-  
   Ptr<Ipv4> ipv4 = GetNode ()->GetObject<Ipv4> ();
   int32_t ifIndex = ipv4->GetInterfaceForDevice (m_device);
 
@@ -460,16 +458,7 @@ void DhcpClient::AcceptAck (DhcpHeader header, Address from)
 
   staticRouting->SetDefaultRoute (m_gateway, ifIndex, 0);
 
-  if (header.GetDhcps() == Ipv4Address("0.0.0.0"))
-  {
-    m_remoteAddress = InetSocketAddress::ConvertFrom (from).GetIpv4 ();
-  }
-  else
-  {
-    m_remoteAddress = header.GetDhcps();
-  }
-
-  NS_LOG_INFO("My New Address is "<<m_myAddress);
+  m_remoteAddress = InetSocketAddress::ConvertFrom (from).GetIpv4 ();
   NS_LOG_INFO ("Current DHCP Server is " << m_remoteAddress);
 
   m_offerList.clear ();

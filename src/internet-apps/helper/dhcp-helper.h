@@ -83,6 +83,26 @@ public:
   /**
    * \brief Install DHCP server of a node / NetDevice
    *
+   * Note: the server address must be coherent with the pool address, because
+   * DHCP relays are not yet supported.
+   *
+   * \param netDevice The NetDevice on which DHCP server application has to be installed
+   * \param serverAddr The Ipv4Address of the server
+   * \param poolAddr The Ipv4Address (network part) of the allocated pool
+   * \param poolMask The mask of the allocated pool
+   * \param minAddr The lower bound of the Ipv4Address pool
+   * \param maxAddr The upper bound of the Ipv4Address pool
+   * \param gateway The Ipv4Address of default gateway (optional)
+   * \return The application container with DHCP server installed
+   */
+  ApplicationContainer InstallDhcpServer (Ptr<NetDevice> netDevice, Ipv4Address serverAddr,
+                                          Ipv4Address poolAddr, Ipv4Mask poolMask,
+                                          Ipv4Address minAddr, Ipv4Address maxAddr,
+                                          Ipv4Address gateway = Ipv4Address ());
+  
+  /**
+   * \brief Install DHCP server of a node / NetDevice
+   *
    * \param netDevice The NetDevice on which DHCP server application has to be installed
    * \param serverAddr The Ipv4Address of the server
    * \param netMask The mask of the allocated pool
@@ -153,3 +173,9 @@ private:
 } // namespace ns3
 
 #endif /* DHCP_HELPER_H */
+
+
+
+
+
+

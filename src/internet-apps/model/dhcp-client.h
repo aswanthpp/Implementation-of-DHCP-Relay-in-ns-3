@@ -53,35 +53,35 @@ public:
    * \return the object TypeId
    */
   static TypeId
-  GetTypeId (void);     
+  GetTypeId (void);
 
-  DhcpClient ();    
+  DhcpClient ();
   virtual ~DhcpClient ();
 
   /**
    * \brief Constructor
    * \param netDevice the NetDevice DHCP should work on
    */
-  DhcpClient (Ptr<NetDevice> netDevice);  
+  DhcpClient (Ptr<NetDevice> netDevice);
 
   /**
    * \brief Get the the NetDevice DHCP should work on
    * \return the NetDevice DHCP should work on
    */
-  Ptr<NetDevice> GetDhcpClientNetDevice (void); 
+  Ptr<NetDevice> GetDhcpClientNetDevice (void);
 
   /**
    * \brief Set the NetDevice DHCP should work on
    * \param netDevice the NetDevice DHCP should work on
    */
-  void SetDhcpClientNetDevice (Ptr<NetDevice> netDevice);  
+  void SetDhcpClientNetDevice (Ptr<NetDevice> netDevice);
 
   /**
    * \brief Get the IPv4Address of current DHCP server
    * \return Ipv4Address of current DHCP server
    */
-  Ipv4Address GetDhcpServer (void);  
-  
+  Ipv4Address GetDhcpServer (void);
+
   /**
    * Assign a fixed random variable stream number to the random variables
    * used by this model. Return the number of streams (possibly zero) that
@@ -90,7 +90,7 @@ public:
    * \param stream First stream index to use
    * \return the number of stream indices assigned by this model
    */
-  int64_t AssignStreams (int64_t stream); 
+  int64_t AssignStreams (int64_t stream);
 
 protected:
   virtual void DoDispose (void);
@@ -109,17 +109,17 @@ private:
   /*
    * \brief Starts the DHCP client application
    */
-  virtual void StartApplication (void);  
+  virtual void StartApplication (void);
 
   /*
-   * \brief Stops the DHCP client applications
+   * \brief Stops the DHCP client application
    */
-  virtual void StopApplication (void);   
+  virtual void StopApplication (void);
 
   /**
    * \brief Handles changes in LinkState
    */
-  void LinkStateHandler (void);  
+  void LinkStateHandler (void);
 
   /**
    * \brief Handles incoming packets from the network
@@ -167,7 +167,7 @@ private:
   Ipv4Address m_remoteAddress;           //!< Initially set to 255.255.255.255 to start DHCP
   Ipv4Address m_offeredAddress;          //!< Address offered to the client
   Ipv4Address m_myAddress;               //!< Address assigned to the client
-  Address m_chaddr;                      //!< chaddr of the interface (stored as an Address for convenience)
+  Address m_chaddr;                      //!< chaddr of the interface (stored as an Address for convenience).
   Ipv4Mask m_myMask;                     //!< Mask of the address assigned
   Ipv4Address m_server;                  //!< Address of the DHCP server
   Ipv4Address m_gateway;                 //!< Address of the gateway
