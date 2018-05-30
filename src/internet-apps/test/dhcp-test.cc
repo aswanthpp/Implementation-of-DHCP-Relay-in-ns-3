@@ -25,10 +25,12 @@
 #include "ns3/simple-net-device-helper.h"
 #include "ns3/internet-stack-helper.h"
 #include "ns3/ipv4-address-helper.h"
+#include "ns3/point-to-point-module.h"
 #include "ns3/dhcp-client.h"
 #include "ns3/dhcp-server.h"
 #include "ns3/dhcp-helper.h"
 #include "ns3/test.h"
+#include "ns3/core-module.h"
 
 using namespace ns3;
 
@@ -57,6 +59,17 @@ public:
   void LeaseObtained (std::string context, const Ipv4Address& newAddress);
 private:
   virtual void DoRun (void);
+  Ipv4Address m_leasedAddress[3]; //!< Address given to the nodes
+};
+
+class DhcpRelayTestCase : public TestCase
+{
+public:
+  DhcpRelayTestCase();
+  virtual ~DhcpRelayTestCase();
+  void LeaseObtained (std::string context, const Ipv4Address& newAddress);
+private:
+  virtual void DoRun(void); 
   Ipv4Address m_leasedAddress[3]; //!< Address given to the nodes
 };
 
@@ -103,7 +116,9 @@ DhcpTestCase::DoRun (void)
   DhcpHelper dhcpHelper;
 
   ApplicationContainer dhcpServerApp = dhcpHelper.InstallDhcpServer (devNet.Get (0), Ipv4Address ("172.30.0.12"),
-                                                                     Ipv4Mask ("/24"),Ipv4Address ("172.30.0.17"));
+                                                                     Ipv4Address ("172.30.0.0"), Ipv4Mask ("/24"),
+                                                                     Ipv4Address ("172.30.0.10"), Ipv4Address ("172.30.0.15"),
+                                                                     Ipv4Address ("172.30.0.17"));
   dhcpServerApp.Start (Seconds (0.0));
   dhcpServerApp.Stop (Seconds (20.0));
 
@@ -139,6 +154,111 @@ DhcpTestCase::DoRun (void)
   Simulator::Destroy ();
 }
 
+DhcpRelayTestCase::DhcpRelayTestCase()
+   : TestCase ("Dhcp test case ")
+{
+}
+
+DhcpRelayTestCase::~DhcpRelayTestCase()
+{
+}
+
+void
+DhcpRelayTestCase::LeaseObtained (std::string context, const Ipv4Address& newAddress)
+{
+  uint8_t numericalContext = std::stoi (context, nullptr, 10);
+
+  if (numericalContext >=0 && numericalContext <=2)
+    {
+      m_leasedAddress[numericalContext] = newAddress;
+    }
+}
+
+void DhcpRelayTestCase::DoRun(void)
+{ NodeContainer nodes;
+  NodeContainer relay;
+  nodes.Create (3);
+  relay.Create (1);
+  
+  NodeContainer net (nodes, relay);
+  
+  SimpleNetDeviceHelper simpleNetDevice;
+  simpleNetDevice.SetChannelAttribute ("Delay", TimeValue (MilliSeconds (2)));
+  simpleNetDevice.SetDeviceAttribute ("DataRate", DataRateValue (DataRate ("5Mbps")));
+  NetDeviceContainer devNet = simpleNetDevice.Install (net);
+  
+  NodeContainer p2pNodes;
+  p2pNodes.Add (net.Get (3));
+  p2pNodes.Create (1);
+  
+  PointToPointHelper pointToPoint;
+  pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("5Mbps"));
+  pointToPoint.SetChannelAttribute ("Delay", StringValue ("2ms"));
+
+  NetDeviceContainer p2pDevices;
+  p2pDevices = pointToPoint.Install (p2pNodes);
+  
+  InternetStackHelper tcpip;
+  tcpip.Install (nodes);
+  tcpip.Install (relay);
+  tcpip.Install (p2pNodes.Get (1));
+  
+  DhcpHelper dhcpHelper;
+  
+  ApplicationContainer dhcpServerApp = dhcpHelper.InstallDhcpServer (p2pDevices.Get (1), Ipv4Address ("172.30.1.12"),
+		                                                                 Ipv4Mask ("/24"));
+
+  dhcpHelper.AddAddressPool(&dhcpServerApp, Ipv4Address ("172.30.1.0"), Ipv4Mask ("/24"), Ipv4Address ("172.30.1.10"),
+    	                      Ipv4Address ("172.30.1.15")); 
+
+  dhcpHelper.AddAddressPool(&dhcpServerApp, Ipv4Address ("172.30.0.0"), Ipv4Mask ("/24"), Ipv4Address ("172.30.0.10"),
+    	                      Ipv4Address ("172.30.0.15"));
+  
+  ApplicationContainer dhcpRelayApp = dhcpHelper.InstallDhcpRelay (p2pDevices.Get (0), Ipv4Address ("172.30.1.16"),
+		                                                               Ipv4Mask ("/24"), Ipv4Address ("172.30.1.12"));
+    
+  dhcpHelper.AddRelayInterface (&dhcpRelayApp, devNet.Get (3), Ipv4Address ("172.30.0.17"), Ipv4Mask ("/24")); 
+  
+  DynamicCast<DhcpServer> (dhcpServerApp.Get (0))->AddStaticDhcpEntry (devNet.Get (2)->GetAddress (), 
+		                       Ipv4Address ("172.30.0.14"));
+		                       
+  dhcpServerApp.Start (Seconds (0.0));
+  dhcpServerApp.Stop (Seconds(20.0));
+
+  dhcpRelayApp.Start (Seconds (0.0));
+  dhcpRelayApp.Stop (Seconds(20.0));
+  
+  NetDeviceContainer dhcpClientNetDevs;
+  dhcpClientNetDevs.Add (devNet.Get (0));
+  dhcpClientNetDevs.Add (devNet.Get (1));
+  dhcpClientNetDevs.Add (devNet.Get (2));
+
+  ApplicationContainer dhcpClients = dhcpHelper.InstallDhcpClient (dhcpClientNetDevs);
+  dhcpClients.Start (Seconds (1.0));
+  dhcpClients.Stop (Seconds(20.0));
+  
+  dhcpClients.Get(0)->TraceConnect ("NewLease", "0", MakeCallback(&DhcpRelayTestCase::LeaseObtained, this));
+  dhcpClients.Get(1)->TraceConnect ("NewLease", "1", MakeCallback(&DhcpRelayTestCase::LeaseObtained, this));
+  dhcpClients.Get(2)->TraceConnect ("NewLease", "2", MakeCallback(&DhcpRelayTestCase::LeaseObtained, this));
+
+  Simulator::Stop (Seconds (21.0));
+
+  Simulator::Run ();
+
+  NS_TEST_ASSERT_MSG_EQ (m_leasedAddress[0], Ipv4Address ("172.30.0.10"),
+                         m_leasedAddress[0] << " instead of " << "172.30.0.10");
+
+  NS_TEST_ASSERT_MSG_EQ (m_leasedAddress[1], Ipv4Address ("172.30.0.11"),
+                         m_leasedAddress[1] << " instead of " << "172.30.0.11");
+
+  NS_TEST_ASSERT_MSG_EQ (m_leasedAddress[2], Ipv4Address ("172.30.0.14"),
+                         m_leasedAddress[2] << " instead of " << "172.30.0.14");
+
+  Simulator::Destroy ();
+
+
+
+}
 /**
  * \ingroup dhcp-test
  * \ingroup tests
@@ -155,6 +275,7 @@ DhcpTestSuite::DhcpTestSuite ()
   : TestSuite ("dhcp", UNIT)
 {
   AddTestCase (new DhcpTestCase, TestCase::QUICK);
+  AddTestCase (new DhcpRelayTestCase, TestCase::QUICK);
 }
 
 static DhcpTestSuite dhcpTestSuite; //!< Static variable for test initialization
