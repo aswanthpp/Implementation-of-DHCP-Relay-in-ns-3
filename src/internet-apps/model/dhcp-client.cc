@@ -385,7 +385,14 @@ void DhcpClient::Request (void)
       header.SetReq (m_offeredAddress);
       header.SetChaddr (m_chaddr);
       packet->AddHeader (header);
-      m_socket->SendTo (packet, 0, InetSocketAddress (Ipv4Address ("255.255.255.255"), DHCP_PEER_PORT));
+      if ((m_socket->SendTo (packet, 0, InetSocketAddress (Ipv4Address ("255.255.255.255"), DHCP_PEER_PORT))) >= 0)
+        {
+          NS_LOG_INFO ("DHCP REQUEST sent");
+        }
+      else
+        {
+          NS_LOG_INFO ("Error while sending DHCP REQ to " << m_remoteAddress);
+        }
       m_state = WAIT_ACK;
       m_nextOfferEvent = Simulator::Schedule (m_nextoffer, &DhcpClient::Select, this);
     }

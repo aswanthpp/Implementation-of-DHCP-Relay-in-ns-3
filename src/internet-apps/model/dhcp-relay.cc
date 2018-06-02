@@ -223,7 +223,7 @@ void DhcpRelay::SendDiscover (Ptr<NetDevice> iDev,DhcpHeader header)
 
 	    if ((m_socket_server->SendTo (packet, 0, InetSocketAddress (m_dhcps, PORT_SERVER))) >= 0)
 		    {
-		      NS_LOG_INFO ("DHCP DISCOVER send from relay to server");
+		      NS_LOG_INFO ("DHCP DISCOVER sent from relay to server");
 		    }
 	    else
 		    {
@@ -330,7 +330,7 @@ void DhcpRelay::SendAckClient (DhcpHeader header)
 
   if ((m_socket_client->SendTo (packet, 0, InetSocketAddress (Ipv4Address ("255.255.255.255"), PORT_CLIENT))) >= 0)
 	{
-	  NS_LOG_INFO ("DHCP ACK send from relay to client");
+	  NS_LOG_INFO ("DHCP ACK sent from relay to client");
 	}
   else
 	{
