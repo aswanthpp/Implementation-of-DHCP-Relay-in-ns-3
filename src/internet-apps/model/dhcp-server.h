@@ -125,6 +125,10 @@ private:
   bool CheckIfValid (Ipv4Address reqAddr);
 
   Ptr<Socket> m_socket;                  //!< The socket bound to port 67
+  Ipv4Address m_poolAddress;             //!< The network address available to the server
+  Ipv4Address m_minAddress;              //!< The first address in the address pool
+  Ipv4Address m_maxAddress;              //!< The last address in the address pool
+  Ipv4Mask m_poolMask;                   //!< The network mask of the pool
   Ipv4Address m_gateway;                 //!< The gateway address
 
   /// Pool address conatainer - pool address / pool mask + min address / max address
