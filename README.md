@@ -45,7 +45,7 @@ To build ns-3 downloaded, open the terminal to `ns-3-allinone` directory and ent
 
 Now clone the repository to your local machine.
 
-`git clone https://github.com/aswanthpp/dhcp_relay_in_ns3.git`
+`git clone https://github.com/aswanthpp/Implementation-of-DHCP-Relay-in-ns-3.git`
 
 Replace the contents in ns-3-dev directory with the cloned directory files. Then configure examples and tests in ns-3 using :
 
