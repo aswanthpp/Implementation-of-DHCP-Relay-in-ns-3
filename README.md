@@ -69,7 +69,10 @@ To enable trace files
 
 ### Future Work
 
-The existing DHCPv4 code limits only one server for each relay agent in a network. We have prepared a document listing the changes required to make the code scalable so as to let the server assign addresses to different subnets. The proposed changes can be found <a href="https://github.com/aswanthpp/Implementation-of-DHCP-Relay-in-ns-3/wiki/Future-Work" target="blank">here</a>.
+Although multiple relay agents can be deployed, this implementation limits the number of DHCP servers associated with a relay agent to one. In future, we plan to extend our implementation to support the use of multiple DHCP servers associated with a relay agent.
+
+<!----------This limitation has already accounted ----------------------------------------------------- 
+The existing DHCPv4 code limits only one server for each relay agent in a network. We have prepared a document listing the changes required to make the code scalable so as to let the server assign addresses to different subnets. The proposed changes can be found <a href="https://github.com/aswanthpp/Implementation-of-DHCP-Relay-in-ns-3/wiki/Future-Work" target="blank">here</a>. -->
 
 ### References
 
