@@ -39,13 +39,15 @@ If you have successfully installed mercurial, you can get copy of the developmen
 
 `cd ns-3-allinone && ./download.py`
 
-`cd ns-3-dev`
+To build ns-3 downloaded, open the terminal to `ns-3-allinone` directory and enter the following command :
+
+`./build.py`
 
 Now clone the repository to your local machine.
 
 `git clone https://github.com/aswanthpp/dhcp_relay_in_ns3.git`
 
-Replace the contents in ns-3-dev directory with the cloned directory files. Then build ns-3 using :
+Replace the contents in ns-3-dev directory with the cloned directory files. Then configure examples and tests in ns-3 using :
 
 `./waf configure --enable-examples --enable-tests`
 
@@ -53,9 +55,17 @@ An example program for DHCP Relay has been provided in :
 
 `src/internet-apps/examples/dhcp-example-relay.cc`
 
-Once ns-3 has been built, we can run the example file as :
+Once ns-3 has been built and examples,tests are enabled, we can run the example file as :
 
-`./waf --run "src/internet-apps/examples/dhcp-example-relay --verbose=true"`
+`./waf --run "src/internet-apps/examples/dhcp-example-relay"`
+
+To enable logging
+
+`./waf --run "src/internet-apps/examples/dhcp-example-relay --verbose=True"`
+
+To enable trace files
+
+`./waf --run "src/internet-apps/examples/dhcp-example-relay --tracing=True"`
 
 ### Future Work
 
