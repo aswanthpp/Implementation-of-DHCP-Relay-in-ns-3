@@ -144,7 +144,7 @@ void DhcpRelay::NetHandlerServer (Ptr<Socket> socket)
     }
   if (header.GetType () == DhcpHeader::DHCPREQ)
     {
-      SendReq (header);
+      SendReq (iDev, header);
     }
 }
 
@@ -210,7 +210,7 @@ void DhcpRelay::SendDiscover (Ptr<NetDevice> iDev,DhcpHeader header)
         }
     }
 
-  if (m_relayClientSideAddress.CombineMask (Ipv4Mask (mask)).Get () != m_relayServerSideAddress.CombineMask (m_subMask).Get ())
+  if (m_relayClientSideAddress.Get () != m_relayServerSideAddress.Get ())
     {
       newDhcpHeader.ResetOpt ();
       newDhcpHeader.SetType (DhcpHeader::DHCPDISCOVER);
@@ -250,7 +250,7 @@ void DhcpRelay::SendOffer (DhcpHeader header)
   uint32_t rebind = header.GetRebind ();
   Ipv4Address giaddress = header.GetGiAddr ();
 
-  if (giaddress.CombineMask (Ipv4Mask (mask)).Get () != m_relayServerSideAddress.CombineMask (m_subMask).Get ())
+  if (giaddress.Get () != m_relayServerSideAddress.Get ())
     {
       newDhcpHeader.ResetOpt ();
       newDhcpHeader.SetType (DhcpHeader::DHCPOFFER);
@@ -278,7 +278,7 @@ void DhcpRelay::SendOffer (DhcpHeader header)
     }
 }
 
-void DhcpRelay::SendReq (DhcpHeader header)
+void DhcpRelay::SendReq (Ptr<NetDevice> iDev, DhcpHeader header)
 {
   NS_LOG_FUNCTION (this << header);
   NS_LOG_FUNCTION (this);
@@ -289,10 +289,17 @@ void DhcpRelay::SendReq (DhcpHeader header)
   uint32_t tran = header.GetTran ();
   Ipv4Address offeredAddress = header.GetReq ();
   Address sourceChaddr = header.GetChaddr ();
-  uint32_t mask = header.GetMask ();
-  Ipv4Address giaddress = header.GetGiAddr ();
 
-  if (giaddress.CombineMask (Ipv4Mask (mask)).Get () != m_relayServerSideAddress.CombineMask (m_subMask).Get ())
+  Ptr<Ipv4L3Protocol> ipv4 = GetNode ()->GetObject< Ipv4L3Protocol > ();
+  int32_t ifIndex = ipv4->GetInterfaceForDevice (iDev);
+
+  Ipv4Address m_relayClientSideAddress;
+  for (uint32_t i = 0; i < ipv4->GetNAddresses (ifIndex); i++)
+    {
+      m_relayClientSideAddress = ipv4->GetAddress (ifIndex, i).GetLocal ();
+    }
+
+  if (m_relayClientSideAddress.Get () != m_relayServerSideAddress.Get ())
     {
 
       DhcpHeader newDhcpHeader;
@@ -326,9 +333,9 @@ void DhcpRelay::SendAckClient (DhcpHeader header)
   uint32_t tran = header.GetTran ();
   Ipv4Address address = header.GetReq ();
   uint32_t type = header.GetType ();
-  uint32_t mask = header.GetMask ();
   Ipv4Address giaddress = header.GetGiAddr ();
-  if (giaddress.CombineMask (Ipv4Mask (mask)).Get () != m_relayServerSideAddress.CombineMask (m_subMask).Get ())
+
+  if (giaddress.Get () != m_relayServerSideAddress.Get ())
     {
 
       DhcpHeader newDhcpHeader;

@@ -102,7 +102,7 @@ private:
    * \brief Sends DHCP REQUEST to server as a unicast message
    * \param header DHCP header of the received message
    */
-  void SendReq (DhcpHeader header);
+  void SendReq (Ptr<NetDevice> iDev, DhcpHeader header);
 
   /**
    * \brief Sends DHCP OFFER coming from server to client
