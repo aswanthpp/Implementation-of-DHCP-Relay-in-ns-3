@@ -39,7 +39,7 @@ int
 main (int argc, char *argv[])
 {
   CommandLine cmd;
-  
+
   bool verbose = false;
   bool tracing = false;
   cmd.AddValue ("verbose", "turn on the logs", verbose);
@@ -106,21 +106,18 @@ main (int argc, char *argv[])
   DhcpHelper dhcpHelper;
 
   // The router must have a fixed IP.
-  Ipv4InterfaceContainer fixedNodes = dhcpHelper.InstallFixedAddress (devNet.Get (4), Ipv4Address ("172.30.0.17"), 
-                                                                      Ipv4Mask ("/24"));
+  Ipv4InterfaceContainer fixedNodes = dhcpHelper.InstallFixedAddress (devNet.Get (4), Ipv4Address ("172.30.0.17"), Ipv4Mask ("/24"));
   // Not really necessary, IP forwarding is enabled by default in IPv4.
   fixedNodes.Get (0).first->SetAttribute ("IpForward", BooleanValue (true));
 
   // DHCP server
   ApplicationContainer dhcpServerApp = dhcpHelper.InstallDhcpServer (devNet.Get (3), Ipv4Address ("172.30.0.12"),
-                                                                     Ipv4Mask ("/24"), Ipv4Address ("172.30.0.17"));
-
-  dhcpHelper.AddAddressPool(&dhcpServerApp, Ipv4Address ("172.30.0.0"), Ipv4Mask ("/24"), Ipv4Address ("172.30.0.10"),
-                            Ipv4Address ("172.30.0.15")); 
+                                                                     Ipv4Address ("172.30.0.0"), Ipv4Mask ("/24"),
+                                                                     Ipv4Address ("172.30.0.10"), Ipv4Address ("172.30.0.15"),
+                                                                     Ipv4Address ("172.30.0.17"));
 
   // This is just to show how it can be done.
-  DynamicCast<DhcpServer> (dhcpServerApp.Get (0))->AddStaticDhcpEntry (devNet.Get (2)->GetAddress (), 
-                           Ipv4Address ("172.30.0.14"));
+  DynamicCast<DhcpServer> (dhcpServerApp.Get (0))->AddStaticDhcpEntry (devNet.Get (2)->GetAddress (), Ipv4Address ("172.30.0.14"));
 
   dhcpServerApp.Start (Seconds (0.0));
   dhcpServerApp.Stop (stopTime);

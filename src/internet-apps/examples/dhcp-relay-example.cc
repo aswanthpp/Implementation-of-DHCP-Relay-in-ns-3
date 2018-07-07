@@ -30,7 +30,6 @@ main (int argc, char *argv[])
       LogComponentEnable ("DhcpRelay", LOG_LEVEL_ALL);
       LogComponentEnable ("UdpEchoServerApplication", LOG_LEVEL_INFO);
       LogComponentEnable ("UdpEchoClientApplication", LOG_LEVEL_INFO);
-      //LogComponentEnable ("DhcpExampleRelay", LOG_LEVEL_ALL);
     }
 
   Time stopTime = Seconds (20);
@@ -38,7 +37,7 @@ main (int argc, char *argv[])
   NS_LOG_INFO ("Create nodes.");
   NodeContainer nodes;
   NodeContainer relay;
-  nodes.Create (1);
+  nodes.Create (3);
   relay.Create (1);
 
   NodeContainer net (nodes, relay);
@@ -51,7 +50,7 @@ main (int argc, char *argv[])
   NetDeviceContainer devNet = csma.Install (net);
 
   NodeContainer p2pNodes;
-  p2pNodes.Add (net.Get (1));
+  p2pNodes.Add (net.Get (3));
   p2pNodes.Create (1);
 
   PointToPointHelper pointToPoint;
@@ -85,22 +84,22 @@ main (int argc, char *argv[])
   ApplicationContainer dhcpServerApp = dhcpHelper.InstallDhcpServer (p2pDevices.Get (1), Ipv4Address ("172.30.1.12"),
                                                                      Ipv4Mask ("/24"));
 
-  dhcpHelper.AddAddressPool (&dhcpServerApp, Ipv4Address ("172.30.1.0"), Ipv4Mask ("/24"), Ipv4Address ("172.30.1.11"),
-                             Ipv4Address ("172.30.1.13"));
+  dhcpHelper.AddAddressPool (&dhcpServerApp, Ipv4Address ("172.30.1.0"), Ipv4Mask ("/24"), Ipv4Address ("172.30.1.10"),
+                             Ipv4Address ("172.30.1.15"));
 
-  dhcpHelper.AddAddressPool (&dhcpServerApp, Ipv4Address ("172.30.0.0"), Ipv4Mask ("/24"), Ipv4Address ("172.30.0.11"),
-                             Ipv4Address ("172.30.0.13"));
+  dhcpHelper.AddAddressPool (&dhcpServerApp, Ipv4Address ("172.30.0.0"), Ipv4Mask ("/24"), Ipv4Address ("172.30.0.10"),
+                             Ipv4Address ("172.30.0.15"));
 
   // DHCP Relay Agent
   ApplicationContainer dhcpRelayApp = dhcpHelper.InstallDhcpRelay (p2pDevices.Get (0), Ipv4Address ("172.30.1.16"),
                                                                    Ipv4Mask ("/24"), Ipv4Address ("172.30.1.12"));
 
-  dhcpHelper.AddRelayInterface (&dhcpRelayApp, devNet.Get (1), Ipv4Address ("172.30.0.17"), Ipv4Mask ("/24"));
+  dhcpHelper.AddRelayInterface (&dhcpRelayApp, devNet.Get (3), Ipv4Address ("172.30.0.17"), Ipv4Mask ("/24"));
 
   // This is just to show how it can be done.
-  /*DynamicCast<DhcpServer> (dhcpServerApp.Get (0))->AddStaticDhcpEntry (devNet.Get (2)->GetAddress (),
-                                       Ipv4Address ("172.30.0.14"));
-  */
+  DynamicCast<DhcpServer> (dhcpServerApp.Get (0))->AddStaticDhcpEntry (devNet.Get (2)->GetAddress (),
+                                                                       Ipv4Address ("172.30.0.14"));
+
   dhcpServerApp.Start (Seconds (0.0));
   dhcpServerApp.Stop (stopTime);
 
@@ -110,8 +109,8 @@ main (int argc, char *argv[])
   // DHCP clients
   NetDeviceContainer dhcpClientNetDevs;
   dhcpClientNetDevs.Add (devNet.Get (0));
-  //dhcpClientNetDevs.Add (devNet.Get (1));
-  //dhcpClientNetDevs.Add (devNet.Get (2));
+  dhcpClientNetDevs.Add (devNet.Get (1));
+  dhcpClientNetDevs.Add (devNet.Get (2));
 
   ApplicationContainer dhcpClients = dhcpHelper.InstallDhcpClient (dhcpClientNetDevs);
   dhcpClients.Start (Seconds (1.0));
@@ -121,16 +120,16 @@ main (int argc, char *argv[])
 
   ApplicationContainer serverApps = echoServer.Install (p2pNodes.Get (1));
   serverApps.Start (Seconds (0.0));
-  serverApps.Stop (Seconds (11.0));
+  serverApps.Stop (stopTime);
 
   UdpEchoClientHelper echoClient (p2pInterfaces.GetAddress (1), 9);
   echoClient.SetAttribute ("MaxPackets", UintegerValue (100));
   echoClient.SetAttribute ("Interval", TimeValue (Seconds (1.0)));
   echoClient.SetAttribute ("PacketSize", UintegerValue (1024));
 
-  ApplicationContainer clientApps = echoClient.Install (nodes.Get (0));
+  ApplicationContainer clientApps = echoClient.Install (nodes.Get (1));
   clientApps.Start (Seconds (10.0));
-  clientApps.Stop (Seconds (11.0));
+  clientApps.Stop (stopTime);
 
   Simulator::Stop (stopTime + Seconds (10.0));
 
