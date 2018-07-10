@@ -37,7 +37,7 @@ main (int argc, char *argv[])
   NS_LOG_INFO ("Create nodes.");
   NodeContainer nodes;
   NodeContainer relay;
-  nodes.Create (2);
+  nodes.Create (3);
   relay.Create (1);
 
   NodeContainer net (nodes, relay);
